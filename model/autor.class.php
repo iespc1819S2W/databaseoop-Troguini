@@ -10,7 +10,9 @@ class Autor
     
     public function __CONSTRUCT()
     {
-        $this->conn = Database::getInstance()->getConnection();      
+        $this->conn = Database::getInstance()->getConnection();  //Usamos un objeto de la clase database y pedimos el
+        // estado de la variable $instance(esto provoca que si no esta iniciada pues se inicie), pedimos conexion porque
+        // si tenemos la variable $instance tenemos creado un objeto database.
         $this->resposta = new Resposta();
     }
     
@@ -35,7 +37,19 @@ class Autor
     
     public function get($id)
     {
-        //TODO
+        try{
+            $sql = "SELECT * FROM AUTORS where ID_AUT = $id";
+            $stm=$this->conn->prepare($sql);
+            $stm->execute();
+            $row=$stm->fetch();
+            $this->resposta->SetDades($row);
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+
+        }catch(Exception $e){
+            $this->resposta->setCorrecta(false, "Error get ID: ".$e->getMessage());
+            return $this->resposta;
+        }
     }
 
     
@@ -56,9 +70,10 @@ class Autor
                             VALUES (:id_aut,:nom_aut,:fk_nacionalitat)";
                 
                 $stm=$this->conn->prepare($sql);
-                $stm->bindValue(':id_aut',$id_aut);
+                $stm->bindValue(':id_aut',$id_aut);//bindValue sirve para vincular un valor con un parametro.
                 $stm->bindValue(':nom_aut',$nom_aut);
-                $stm->bindValue(':fk_nacionalitat',!empty($fk_nacionalitat)?$fk_nacionalitat:NULL,PDO::PARAM_STR);
+                $stm->bindValue(':fk_nacionalitat',!empty($fk_nacionalitat)?$fk_nacionalitat:NULL,PDO::PARAM_STR);//representa
+                //un tipo cadena como parametro.
                 $stm->execute();
             
        	        $this->resposta->setCorrecta(true);
@@ -73,14 +88,47 @@ class Autor
     
     public function update($data)
     {
-        // TODO
+        try{
+            $id_aut = $data['id_aut'];
+            $nom_aut = $data['nom_aut'];
+            $fk_nacionalitat = $data['fk_nacionalitat'];
+            $sql = "update AUTORS set NOM_AUT=:nom_aut, FK_NACIONALITAT = :fk_nacionalitat where ID_AUT = :id_aut";
+            $stm = $this->conn->prepare($sql);
+            $stm->bindValue(':id_aut',$id_aut);//falta tener el id del autor
+            $stm->bindValue(':nom_aut',$nom_aut);
+            $stm->bindValue(':fk_nacionalitat',!empty($fk_nacionalitat)?$fk_nacionalitat:NULL,PDO::PARAM_STR);
+            $stm->execute();
+//            $row = $stm->fetch();
+//
+//            $this->resposta->SetDades($row);
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+
+        }catch (Exception $e){
+            $this->resposta->setCorrecta(false,"Error Update: ".$e->getMessage());
+            return $this->resposta;
+
+        }
     }
 
     
     
     public function delete($id)
     {
-        // TODO
+        try{
+            $id_aut = $id;
+            $sql = "DELETE FROM AUTORS where id_aut = :id_aut";
+            $stm = $this->conn->prepare($sql);
+            $stm->bindValue(':id_aut',$id_aut);
+            $stm->execute();
+
+            $this->resposta->setCorrecta(true);
+            return $this->resposta;
+
+        }catch (Exception $e){
+            $this->resposta->setCorrecta(false,"Error delete: ".$e->getMessage());
+            return $this->resposta;
+        }
     }
 
     public function filtra($where,$orderby,$offset,$count)
